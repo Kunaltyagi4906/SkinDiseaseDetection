@@ -2,11 +2,10 @@
 
 import os
 
-from skindisease import app, db
+from skindisease import app, initialize_database
 
 # Create tables if not already created
-with app.app_context():
-    db.create_all()
+initialize_database()
 
 # Run the Flask app
 if __name__ == '__main__':

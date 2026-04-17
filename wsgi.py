@@ -1,4 +1,6 @@
-from skindisease import app
+from skindisease import app, initialize_database
+
+initialize_database()
 
 
 if __name__ == "__main__":
