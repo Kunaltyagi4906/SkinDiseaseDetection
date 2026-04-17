@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.idea/
+instance/
+skindisease/__pycache__/
+skindisease/instance/
+static/uploads/

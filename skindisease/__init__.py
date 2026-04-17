@@ -1,10 +1,13 @@
+import os
+
 from flask import Flask,render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///skin.db'
-app.config['SECRET_KEY'] ='b296b88b0d23c91403f77c84'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///skin.db')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'b296b88b0d23c91403f77c84')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)

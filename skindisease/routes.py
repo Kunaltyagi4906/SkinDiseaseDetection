@@ -13,6 +13,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from werkzeug.utils import secure_filename
+from sqlalchemy import or_
 
 # Allowed extensions for file upload
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -133,8 +134,8 @@ def predict():
 def register_page():
     form = RegisterForm()
     if form.validate_on_submit():
-        user_to_create = User(username=form.username.data,
-                              email_address=form.email_address.data,
+        user_to_create = User(username=form.username.data.strip(),
+                              email_address=form.email_address.data.strip().lower(),
                               password=form.password1.data)
         db.session.add(user_to_create)
         db.session.commit()
@@ -151,7 +152,13 @@ def register_page():
 def login_page():
     form = LoginForm()
     if form.validate_on_submit():
-        attempted_user = User.query.filter_by(username=form.username.data).first()
+        login_value = form.username.data.strip()
+        attempted_user = User.query.filter(
+            or_(
+                User.username == login_value,
+                User.email_address == login_value.lower()
+            )
+        ).first()
         if attempted_user and attempted_user.check_password_correction(
                 attempted_password=form.password.data
         ):
