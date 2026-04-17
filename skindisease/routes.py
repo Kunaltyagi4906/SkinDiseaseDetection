@@ -14,6 +14,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_
+from werkzeug.exceptions import RequestEntityTooLarge
 
 # Allowed extensions for file upload
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -175,5 +176,11 @@ def logout_page():
     logout_user()
     flash("You have been logged out!", category='info')
     return redirect(url_for("home_page"))
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_file_too_large(error):
+    flash("Uploaded image is too large. Please choose an image smaller than 16 MB.", category="danger")
+    return redirect(url_for("predict"))
 
 
