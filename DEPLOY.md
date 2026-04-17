@@ -16,11 +16,13 @@ This repository now includes:
 3. Create a new `Web Service`.
 4. Connect your GitHub repository.
 5. If Render asks for commands, use:
-   - Build command: `pip install -r requirements.txt`
+   - Build command: `pip install --upgrade pip setuptools wheel && pip install -r requirements.txt`
    - Start command: `gunicorn --bind 0.0.0.0:$PORT wsgi:app`
 6. Add an environment variable:
    - `SECRET_KEY` = any long random string
-7. Deploy the service.
+7. Add an environment variable:
+   - `PYTHON_VERSION` = `3.11.11`
+8. Deploy the service.
 
 ## Important Note About Database
 
