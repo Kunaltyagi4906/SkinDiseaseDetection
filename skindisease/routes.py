@@ -24,7 +24,7 @@ app.config['ALLOWED_EXTENSIONS'] = ALLOWED_EXTENSIONS
 
 # Model and Labels
 model_path = os.path.join('model', 'my_model.keras')
-model = load_model(model_path)
+model = None
 labels = [
     'BA-cellulitis',
     'BA-impetigo',
@@ -76,6 +76,26 @@ disease_info = {
 UPLOAD_FOLDER = 'static/uploads/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
+def get_model():
+    global model
+    if model is None:
+        model = load_model(model_path)
+    return model
+
+
+def predict_image(img):
+    loaded_model = get_model()
+    img = cv2.resize(img, (224, 224))
+    img = preprocess_input(np.array([img]))
+    prediction = loaded_model.predict(img)
+    predicted_class = labels[np.argmax(prediction)]
+    disease_details = disease_info.get(
+        predicted_class,
+        {"treatment": "General treatment advice.", "cure": "General cure information."}
+    )
+    return predicted_class, disease_details
+
 @app.route('/')
 @app.route('/home')
 def home_page():
@@ -98,13 +118,11 @@ def predict():
 
                 # Load image for prediction
                 img = cv2.imread(filepath)
-                img = cv2.resize(img, (224, 224))  # Resize to model input size
-                img = preprocess_input(np.array([img]))  # Preprocess the image
-                prediction = model.predict(img)
-                predicted_class = labels[np.argmax(prediction)]
+                if img is None:
+                    flash("Could not read the uploaded image. Please try another file.", category="danger")
+                    return redirect(url_for("predict"))
 
-                # Fetch disease details
-                disease_details = disease_info.get(predicted_class, {"treatment": "General treatment advice.", "cure": "General cure information."})
+                predicted_class, disease_details = predict_image(img)
 
                 return render_template('result.html', image_url=url_for('static', filename=f'uploads/{filename}'),
                                        prediction=predicted_class, details=disease_details)
@@ -112,18 +130,20 @@ def predict():
         # Check if the form is for capturing an image from the webcam
         elif 'captured_image' in request.form:
             captured_image = request.form['captured_image']
+            if not captured_image or ',' not in captured_image:
+                flash("No webcam image was captured. Please start the webcam and capture again.", category="danger")
+                return redirect(url_for("predict"))
+
             # Process captured image (base64 data)
-            img_data = captured_image.split(',')[1]  # Remove the "data:image/png;base64," part
+            img_data = captured_image.split(',', 1)[1]  # Remove the "data:image/png;base64," part
             img_bytes = base64.b64decode(img_data)
             np_arr = np.frombuffer(img_bytes, np.uint8)
             img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            img = cv2.resize(img, (224, 224))  # Resize to model input size
-            img = preprocess_input(np.array([img]))  # Preprocess the image
-            prediction = model.predict(img)
-            predicted_class = labels[np.argmax(prediction)]
+            if img is None:
+                flash("Captured webcam image could not be processed. Please try again.", category="danger")
+                return redirect(url_for("predict"))
 
-            # Fetch disease details
-            disease_details = disease_info.get(predicted_class, {"treatment": "General treatment advice.", "cure": "General cure information."})
+            predicted_class, disease_details = predict_image(img)
 
             return render_template('result.html', prediction=predicted_class, details=disease_details)
 
