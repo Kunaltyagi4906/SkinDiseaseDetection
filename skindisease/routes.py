@@ -136,8 +136,25 @@ def predict():
 
             # Process captured image (base64 data)
             img_data = captured_image.split(',', 1)[1]  # Remove the "data:image/png;base64," part
-            img_bytes = base64.b64decode(img_data)
+            if not img_data.strip():
+                flash("No webcam image was captured. Please start the webcam and capture again.", category="danger")
+                return redirect(url_for("predict"))
+
+            try:
+                img_bytes = base64.b64decode(img_data)
+            except Exception:
+                flash("Captured webcam image was invalid. Please try again.", category="danger")
+                return redirect(url_for("predict"))
+
+            if not img_bytes:
+                flash("Captured webcam image was empty. Please try again.", category="danger")
+                return redirect(url_for("predict"))
+
             np_arr = np.frombuffer(img_bytes, np.uint8)
+            if np_arr.size == 0:
+                flash("Captured webcam image was empty. Please try again.", category="danger")
+                return redirect(url_for("predict"))
+
             img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
             if img is None:
                 flash("Captured webcam image could not be processed. Please try again.", category="danger")

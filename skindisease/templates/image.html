@@ -232,19 +232,33 @@
             const webcam = document.getElementById("webcam");
             const canvas = document.getElementById("canvas");
             const context = canvas.getContext("2d");
+            const capturedImageField = document.getElementById("captured_image");
+
+            if (!webcamStream || webcam.readyState < 2 || webcam.videoWidth === 0 || webcam.videoHeight === 0) {
+                alert("Please start the webcam and wait a moment before capturing.");
+                return;
+            }
+
+            const maxWidth = 640;
+            const scale = Math.min(1, maxWidth / webcam.videoWidth);
 
             // Set canvas size to match the video size
-            canvas.width = webcam.videoWidth;
-            canvas.height = webcam.videoHeight;
+            canvas.width = Math.max(1, Math.floor(webcam.videoWidth * scale));
+            canvas.height = Math.max(1, Math.floor(webcam.videoHeight * scale));
 
             // Draw the current frame on the canvas
             context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
 
             // Convert canvas to base64 image string
-            const capturedImage = canvas.toDataURL("image/png");
+            const capturedImage = canvas.toDataURL("image/jpeg", 0.85);
+
+            if (!capturedImage || capturedImage === "data:,") {
+                alert("Could not capture a valid webcam image. Please try again.");
+                return;
+            }
 
             // Set the captured image data to the hidden form field
-            document.getElementById("captured_image").value = capturedImage;
+            capturedImageField.value = capturedImage;
 
             // Submit the form to send the image data to the server for prediction
             document.getElementById("imageForm").submit();
